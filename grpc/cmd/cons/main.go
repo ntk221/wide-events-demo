@@ -27,7 +27,6 @@ func main() {
 	queueURL := envOrDefault("QUEUE_URL", "amqp://guest:guest@localhost:5672/")
 	dsn := envOrDefault("DB_DSN", "root:rootpass@tcp(localhost:3306)/demo")
 
-	// Connect to MySQL
 	var err error
 	for i := 0; i < 30; i++ {
 		db, err = sql.Open("mysql", dsn)
@@ -46,7 +45,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Connect to RabbitMQ
 	var conn *amqp.Connection
 	var ch *amqp.Channel
 	for i := 0; i < 30; i++ {
@@ -89,7 +87,6 @@ func main() {
 func processMessage(msg amqp.Delivery) {
 	start := time.Now()
 
-	// Parse message body: "route trace_id timestamp"
 	parts := strings.Fields(string(msg.Body))
 	traceID := ""
 	if len(parts) >= 2 {

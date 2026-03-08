@@ -11,7 +11,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	pb "grpc-tier2/pb"
+	pb "wide-events-grpc/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -21,10 +21,6 @@ var logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 }))
 
 var db *sql.DB
-
-// ---------------------------------------------------------------------------
-// Wide Event (Canonical Log Line) via gRPC Interceptor
-// ---------------------------------------------------------------------------
 
 type eventAttrs struct {
 	mu    sync.Mutex
@@ -40,10 +36,7 @@ func (e *eventAttrs) Add(attrs ...slog.Attr) {
 type eventKey struct{}
 
 // WideEventInterceptor is a gRPC UnaryServerInterceptor.
-// It plays the same role as HTTP middleware:
-//   1. Create eventAttrs and attach to context
-//   2. Let the handler add fields freely
-//   3. Emit a single wide event line after the handler returns
+// Same role as HTTP middleware: create event → let handler add fields → emit 1 line.
 func WideEventInterceptor(
 	ctx context.Context,
 	req interface{},
@@ -52,7 +45,6 @@ func WideEventInterceptor(
 ) (interface{}, error) {
 	start := time.Now()
 
-	// Extract trace_id from gRPC metadata (like HTTP headers)
 	traceID := ""
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		if vals := md.Get("x-trace-id"); len(vals) > 0 {
@@ -68,10 +60,8 @@ func WideEventInterceptor(
 	)
 	ctx = context.WithValue(ctx, eventKey{}, event)
 
-	// Call the actual handler
 	resp, err := handler(ctx, req)
 
-	// Emit wide event
 	durationMs := time.Since(start).Milliseconds()
 	event.Add(slog.Int64("duration_ms", durationMs))
 
@@ -94,13 +84,8 @@ func WideEventInterceptor(
 	event.mu.Unlock()
 
 	logger.Log(context.Background(), level, "request", args...)
-
 	return resp, err
 }
-
-// ---------------------------------------------------------------------------
-// gRPC Service Implementation
-// ---------------------------------------------------------------------------
 
 type tier2Server struct {
 	pb.UnimplementedTier2ServiceServer
@@ -188,7 +173,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Register the interceptor — this is the gRPC equivalent of HTTP middleware
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(WideEventInterceptor),
 	)

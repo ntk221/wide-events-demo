@@ -5,6 +5,6 @@ grpc/logs/*.ndjson
 tier1/tier1
 tier2/tier2
 cons/cons
-grpc/tier1/tier1
-grpc/tier2/tier2
-grpc/cons/cons
+grpc/tier1
+grpc/tier2
+grpc/cons

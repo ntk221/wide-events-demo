@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
-	pb "grpc-tier1/pb"
+	pb "wide-events-grpc/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -22,10 +22,6 @@ import (
 var logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 	Level: slog.LevelInfo,
 }))
-
-// ---------------------------------------------------------------------------
-// Wide Event context (same pattern as HTTP version)
-// ---------------------------------------------------------------------------
 
 type eventAttrs struct {
 	mu    sync.Mutex
@@ -45,7 +41,6 @@ func goSlowP() bool {
 	return rand.Float64()*100 > 95
 }
 
-// WideEventMiddleware — HTTP middleware for tier1 (browser-facing)
 func WideEventMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -87,11 +82,11 @@ func WideEventMiddleware(next http.Handler) http.Handler {
 }
 
 var (
-	tier2Addr  string
-	queueURL   string
-	saasURL    string
-	amqpConn   *amqp.Connection
-	amqpCh     *amqp.Channel
+	tier2Addr   string
+	queueURL    string
+	saasURL     string
+	amqpConn    *amqp.Connection
+	amqpCh      *amqp.Channel
 	tier2Client pb.Tier2ServiceClient
 )
 
@@ -100,7 +95,6 @@ func main() {
 	queueURL = envOrDefault("QUEUE_URL", "amqp://guest:guest@127.0.0.1:5672/")
 	saasURL = envOrDefault("SAAS_URL", "https://www.githubstatus.com/api/v2/status.json")
 
-	// Connect to tier2 via gRPC
 	conn, err := grpc.NewClient(tier2Addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
@@ -176,7 +170,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	doQueue(ctx, traceID, route, &hasError)
 	doSaas(ctx, &hasError)
 
-	// Call tier2 via gRPC instead of HTTP
 	if route == "/error" {
 		doTier2Error(ctx, traceID, &hasError)
 	} else {
@@ -255,12 +248,10 @@ func doSaas(ctx context.Context, hasError *bool) {
 	}
 }
 
-// doTier2Query calls tier2 via gRPC with trace_id in metadata
 func doTier2Query(ctx context.Context, traceID string, hasError *bool) {
 	start := time.Now()
 	event := ctx.Value(eventKey{}).(*eventAttrs)
 
-	// Pass trace_id via gRPC metadata (equivalent to X-Trace-Id header)
 	md := metadata.Pairs("x-trace-id", traceID)
 	grpcCtx := metadata.NewOutgoingContext(ctx, md)
 
@@ -286,7 +277,6 @@ func doTier2Query(ctx context.Context, traceID string, hasError *bool) {
 	}
 }
 
-// doTier2Error calls tier2 InjectError via gRPC
 func doTier2Error(ctx context.Context, traceID string, hasError *bool) {
 	start := time.Now()
 	event := ctx.Value(eventKey{}).(*eventAttrs)
