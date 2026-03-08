@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -177,6 +178,18 @@ func main() {
 		grpc.UnaryInterceptor(WideEventInterceptor),
 	)
 	pb.RegisterTier2ServiceServer(srv, &tier2Server{})
+
+	// HTTP healthcheck on port+1 (e.g. 9401) so Docker can check liveness
+	healthPort := envOrDefault("HEALTH_PORT", "9401")
+	go func() {
+		hmux := http.NewServeMux()
+		hmux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, "ok")
+		})
+		logger.Info("tier2 healthcheck on :" + healthPort)
+		http.ListenAndServe(":"+healthPort, hmux)
+	}()
 
 	logger.Info(fmt.Sprintf("tier2 gRPC server starting on :%s", port))
 	if err := srv.Serve(lis); err != nil {

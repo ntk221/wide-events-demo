@@ -18,11 +18,14 @@ services:
       - tier1
 
   tier1:
-    build: ./tier1
+    build:
+      context: .
+      args:
+        TARGET: tier1
     ports:
       - "8300:8080"
     environment:
-      - TIER2_URL=http://tier2:8080
+      - TIER2_ADDR=tier2:9400
       - QUEUE_URL=amqp://guest:guest@queue:5672/
       - SAAS_URL=https://www.githubstatus.com/api/v2/status.json
     depends_on:
@@ -32,19 +35,24 @@ services:
         condition: service_healthy
 
   tier2:
-    build: ./tier2
+    build:
+      context: .
+      args:
+        TARGET: tier2
     ports:
-      - "8400:8080"
+      - "8400:9400"
     environment:
       - DB_DSN=root:rootpass@tcp(db:3306)/demo
+      - PORT=9400
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthcheck"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9401/"]
       interval: 5s
       timeout: 3s
       retries: 10
+      start_period: 15s
 
   db:
     image: mysql:latest
@@ -73,7 +81,10 @@ services:
       retries: 10
 
   cons:
-    build: ./cons
+    build:
+      context: .
+      args:
+        TARGET: cons
     environment:
       - QUEUE_URL=amqp://guest:guest@queue:5672/
       - DB_DSN=root:rootpass@tcp(db:3306)/demo
