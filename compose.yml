@@ -27,12 +27,14 @@ services:
     environment:
       - TIER2_ADDR=tier2:9400
       - QUEUE_URL=amqp://guest:guest@queue:5672/
-      - SAAS_URL=https://www.githubstatus.com/api/v2/status.json
+      - SAAS_URL=http://saas:80/status.json
     depends_on:
       queue:
         condition: service_healthy
       tier2:
         condition: service_healthy
+      saas:
+        condition: service_started
 
   tier2:
     build:
@@ -93,3 +95,11 @@ services:
         condition: service_healthy
       db:
         condition: service_healthy
+
+  saas:
+    build:
+      context: .
+      args:
+        TARGET: saas
+    ports:
+      - "8700:80"
