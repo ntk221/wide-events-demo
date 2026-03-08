@@ -1,4 +1,4 @@
-.PHONY: up down logs query q1 q2 q3 q4 traffic
+.PHONY: up down logs logs-reset query q1 q2 q3 q4 traffic
 
 up:
 	docker compose up -d --build
@@ -8,10 +8,14 @@ down:
 
 logs:
 	@mkdir -p logs
-	@docker compose logs tier1 --no-log-prefix > logs/tier1.ndjson 2>/dev/null
-	@docker compose logs tier2 --no-log-prefix > logs/tier2.ndjson 2>/dev/null
-	@docker compose logs cons  --no-log-prefix > logs/cons.ndjson  2>/dev/null
+	@docker compose logs tier1 --no-log-prefix 2>/dev/null >> logs/tier1.ndjson && sort -u -o logs/tier1.ndjson logs/tier1.ndjson
+	@docker compose logs tier2 --no-log-prefix 2>/dev/null >> logs/tier2.ndjson && sort -u -o logs/tier2.ndjson logs/tier2.ndjson
+	@docker compose logs cons  --no-log-prefix 2>/dev/null >> logs/cons.ndjson  && sort -u -o logs/cons.ndjson  logs/cons.ndjson
 	@echo "Collected logs -> logs/tier1.ndjson, logs/tier2.ndjson, logs/cons.ndjson"
+
+logs-reset:
+	@rm -f logs/*.ndjson
+	@echo "Logs cleared."
 
 traffic:
 	@echo "Generating traffic..."
@@ -44,7 +48,8 @@ help: ## コマンド一覧
 	@echo "使い方:"
 	@echo "  make up        サービス起動"
 	@echo "  make traffic   テストトラフィック生成"
-	@echo "  make logs      ログ収集"
+	@echo "  make logs      ログ収集（追記・重複排除）"
+	@echo "  make logs-reset ログをクリア"
 	@echo "  make q1        どのルートが遅い？"
 	@echo "  make q2        SaaS 障害と遅延の相関"
 	@echo "  make q3        DB ボトルネックの時間帯"
