@@ -1,4 +1,4 @@
-module wide-events-grpc
+module wide-events-demo
 
 go 1.25.1
 

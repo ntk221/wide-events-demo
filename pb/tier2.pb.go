@@ -212,7 +212,7 @@ const file_tier2_proto_rawDesc = "" +
 	"\terror_msg\x18\x01 \x01(\tR\berrorMsg2|\n" +
 	"\fTier2Service\x122\n" +
 	"\x05Query\x12\x13.tier2.QueryRequest\x1a\x14.tier2.QueryResponse\x128\n" +
-	"\vInjectError\x12\x13.tier2.ErrorRequest\x1a\x14.tier2.ErrorResponseB\x15Z\x13wide-events-grpc/pbb\x06proto3"
+	"\vInjectError\x12\x13.tier2.ErrorRequest\x1a\x14.tier2.ErrorResponseB\x15Z\x13wide-events-demo/pbb\x06proto3"
 
 var (
 	file_tier2_proto_rawDescOnce sync.Once

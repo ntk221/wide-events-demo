@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package tier2;
 
-option go_package = "wide-events-grpc/pb";
+option go_package = "wide-events-demo/pb";
 
 service Tier2Service {
   rpc Query(QueryRequest) returns (QueryResponse);

@@ -18,14 +18,8 @@
                                      → [tier2] → [db]
 ```
 
-## 2つの実装
-
-| ディレクトリ | tier1 → tier2 | Wide Event のフック |
-|---|---|---|
-| `tier1/` `tier2/` `cons/` | HTTP | `http.Handler` middleware |
-| `grpc/` | gRPC | `grpc.UnaryInterceptor` |
-
-どちらも同じパターン: middleware/interceptor が `eventAttrs` を context に注入 → 各層がフィールドを追加 → 最後に1行出力。
+tier1 → tier2 は gRPC。Wide Event の収集は `grpc.UnaryInterceptor` で行う。
+tier1 のブラウザ向けは HTTP middleware、パターンは同じ: `eventAttrs` を context に注入 → 各層がフィールドを追加 → 最後に1行出力。
 
 ## 使い方
 
