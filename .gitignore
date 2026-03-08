@@ -1,6 +1,6 @@
 logs/*.ndjson
 
-# Go binaries
-tier1
-tier2
-cons
+# Go binaries (built at project root by `go build ./cmd/*`)
+/tier1
+/tier2
+/cons
