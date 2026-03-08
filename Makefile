@@ -1,4 +1,4 @@
-.PHONY: up down logs logs-reset query q1 q2 q3 q4 traffic
+.PHONY: up down logs logs-reset query q1 q2 q3 q4 traffic saas-down saas-up
 
 up:
 	docker compose up -d --build
@@ -44,14 +44,22 @@ q3: logs ## DB ボトルネックの時間帯
 q4: logs ## trace_id でサービス横断追跡
 	@duckdb < queries/q4_trace_join.sql
 
+saas-down: ## SaaS 障害 (タイムアウト → レイテンシ悔化)
+	@curl -s http://localhost:8700/admin/down
+
+saas-up: ## SaaS 復旧
+	@curl -s http://localhost:8700/admin/up
+
 help: ## コマンド一覧
 	@echo "使い方:"
-	@echo "  make up        サービス起動"
-	@echo "  make traffic   テストトラフィック生成"
-	@echo "  make logs      ログ収集（追記・重複排除）"
+	@echo "  make up         サービス起動"
+	@echo "  make traffic    テストトラフィック生成"
+	@echo "  make logs       ログ収集（追記・重複排除）"
 	@echo "  make logs-reset ログをクリア"
-	@echo "  make q1        どのルートが遅い？"
-	@echo "  make q2        SaaS 障害と遅延の相関"
-	@echo "  make q3        DB ボトルネックの時間帯"
-	@echo "  make q4        trace_id でサービス横断追跡"
-	@echo "  make down      サービス停止"
+	@echo "  make q1         どのルートが遅い？"
+	@echo "  make q2         SaaS 障害と遅延の相関"
+	@echo "  make q3         DB ボトルネックの時間帯"
+	@echo "  make q4         trace_id でサービス横断追跡"
+	@echo "  make saas-down  SaaS 障害 (タイムアウト)"
+	@echo "  make saas-up    SaaS 復旧"
+	@echo "  make down       サービス停止"
