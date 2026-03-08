@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package tier2;
+
+option go_package = "grpc/pb";
+
+service Tier2Service {
+  rpc Query(QueryRequest) returns (QueryResponse);
+  rpc InjectError(ErrorRequest) returns (ErrorResponse);
+}
+
+message QueryRequest {}
+
+message QueryResponse {
+  bool db_ok = 1;
+  int32 db_rows = 2;
+  int64 db_duration_ms = 3;
+}
+
+message ErrorRequest {}
+
+message ErrorResponse {
+  string error_msg = 1;
+}
