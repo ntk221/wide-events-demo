@@ -30,18 +30,23 @@ traffic:
 query:
 	@test -n "$(Q)" || (echo "Usage: make query Q=queries/q1_slow_routes.sql" && exit 1)
 	@make logs --no-print-directory
-	duckdb < $(Q)
+	@echo "---"; cat $(Q); echo "---"
+	@duckdb < $(Q)
 
 q1: logs ## どのルートが遅い？
+	@echo "---"; cat queries/q1_slow_routes.sql; echo "---"
 	@duckdb < queries/q1_slow_routes.sql
 
 q2: logs ## SaaS 障害と遅延の相関
+	@echo "---"; cat queries/q2_saas_correlation.sql; echo "---"
 	@duckdb < queries/q2_saas_correlation.sql
 
 q3: logs ## DB ボトルネックの時間帯
+	@echo "---"; cat queries/q3_db_bottleneck.sql; echo "---"
 	@duckdb < queries/q3_db_bottleneck.sql
 
 q4: logs ## trace_id でサービス横断追跡
+	@echo "---"; cat queries/q4_trace_join.sql; echo "---"
 	@duckdb < queries/q4_trace_join.sql
 
 saas-down: ## SaaS 障害 (タイムアウト → レイテンシ悔化)

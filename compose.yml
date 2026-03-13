@@ -1,6 +1,7 @@
 services:
   waf:
     image: haproxy:lts-alpine
+    user: root
     ports:
       - "8100:8080"
     volumes:
@@ -29,12 +30,10 @@ services:
       - QUEUE_URL=amqp://guest:guest@queue:5672/
       - SAAS_URL=http://saas:80/status.json
     depends_on:
-      queue:
-        condition: service_healthy
-      tier2:
-        condition: service_healthy
-      saas:
-        condition: service_started
+      - queue
+      - tier2
+      - saas
+    restart: on-failure
 
   tier2:
     build:
@@ -47,14 +46,8 @@ services:
       - DB_DSN=root:rootpass@tcp(db:3306)/demo
       - PORT=9400
     depends_on:
-      db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9401/"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 15s
+      - db
+    restart: on-failure
 
   db:
     image: mysql:latest
@@ -65,22 +58,12 @@ services:
       - MYSQL_DATABASE=demo
     volumes:
       - ./db/bootstrap.sql:/docker-entrypoint-initdb.d/bootstrap.sql:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
 
   queue:
     image: rabbitmq:3-management
     ports:
       - "8600:15672"
       - "8650:5672"
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
 
   cons:
     build:
@@ -91,10 +74,9 @@ services:
       - QUEUE_URL=amqp://guest:guest@queue:5672/
       - DB_DSN=root:rootpass@tcp(db:3306)/demo
     depends_on:
-      queue:
-        condition: service_healthy
-      db:
-        condition: service_healthy
+      - queue
+      - db
+    restart: on-failure
 
   saas:
     build:
